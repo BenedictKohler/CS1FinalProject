@@ -1,0 +1,1001 @@
+import pygame, random
+
+# Initialize
+pygame.init()
+pygame.mixer.init()
+
+# Display Fullscreen
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+WIDTH = screen.get_width()
+HEIGHT = screen.get_height()
+
+## Create Sounds to be used
+collision = pygame.mixer.Sound("collision.wav")
+menu = pygame.mixer.Sound("titletheme.wav")
+result = pygame.mixer.Sound("victory.wav")
+game = pygame.mixer.Sound("matchtheme.wav")
+
+
+
+# Don't want to see mouse
+pygame.mouse.set_visible(False) # Don't want to see mouse, only puck
+
+
+def Result(player):
+    if player == "COM":
+        message_1 = "Unlucky!"
+        message_2 = "You Lost!"
+    else:
+        message_1 = "Congratulations Player " + str(player) + "."
+        message_2 = "You Won!!"
+    
+    background = pygame.image.load("gameBackground.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+    
+    screen.blit(background, (0, 0))
+
+    xVal, yVal = WIDTH//2, HEIGHT//2 - 50
+
+    lab_1 = Label(message_1, (xVal, yVal), None, 100, (255, 255, 255))
+    lab_2 = Label(message_2, (xVal, yVal+100), None, 100, (255, 255, 255))
+    group = pygame.sprite.Group(lab_1, lab_2)
+
+    clock = pygame.time.Clock()
+    time = 0
+
+    result.play()
+
+    # Move the credits screen message
+    while time <= 210:
+        clock.tick(30)
+
+        time += 1
+
+        group.clear(screen, background)
+        group.draw(screen)
+
+        pygame.display.flip()
+
+    result.stop()
+
+# Mouse is a puck image and is used on title and instruction screen
+class Mouse(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("Puck.png").convert()
+        self.image = pygame.transform.scale(self.image, (30, 30))
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.rect = self.image.get_rect()
+        self.rect.center = (screen.get_width()//2, screen.get_height()//2)
+
+    def update(self):
+        self.rect.center = pygame.mouse.get_pos()
+
+# This screen tells user the controls and some rules
+def Instructions():
+    background = pygame.image.load("howtoplay.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+    menu.play()
+    
+    screen.blit(background, (0, 0))
+
+    mouse = Mouse()
+    mouseGroup = pygame.sprite.Group(mouse)
+
+    clock = pygame.time.Clock()
+    keepGoing = True
+
+    while keepGoing:
+        clock.tick(30)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                keepGoing = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    keepGoing = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if pos[0] >= 17 and pos[0] <= 184 and pos[1] >= 685 and pos[1] <= 756:
+                    keepGoing = False
+
+        mouseGroup.clear(screen, background)
+        mouseGroup.update()
+        mouseGroup.draw(screen)
+        pygame.display.flip()
+
+    menu.stop()
+
+    Menu() # If user clicks back then go to titlescreen
+
+# This is used to create labels
+class Label(pygame.sprite.Sprite):
+
+    def __init__(self, msg, center, fontType, fontSize, textColor):
+        pygame.sprite.Sprite.__init__(self)
+        self.font = pygame.font.Font(fontType, fontSize)
+        self.text = msg
+        self.center = center
+        self.textColor = textColor
+        self.image = self.font.render(self.text, 1, self.textColor)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.center
+
+    def update(self):
+        self.image = self.font.render(self.text, 1, self.textColor)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.center
+
+    def move(self, dx, dy):
+        self.rect.centerx += dx
+        self.rect.centery += dy
+
+# This is our ending screen display. Is showed when game is exited.
+def Exit():
+    message_1 = "Thanks for playing!"
+    message_2 = "Created by Benedict and Ollin"
+    
+    background = pygame.image.load("gameBackground.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+    
+    screen.blit(background, (0, 0))
+
+    xVal, yVal = WIDTH//2, screen.get_height()
+
+    lab_1 = Label(message_1, (xVal, yVal), None, 40, (255, 255, 255))
+    lab_2 = Label(message_2, (xVal, yVal+40), None, 40, (255, 255, 255))
+    group = pygame.sprite.Group(lab_1, lab_2)
+
+    clock = pygame.time.Clock()
+
+    # Move the credits screen message
+    while yVal > -50:
+        clock.tick(30)
+
+        yVal -= 4
+
+        lab_1.move(0, -4)
+        lab_2.move(0, -4)
+
+        group.clear(screen, background)
+        group.draw(screen)
+
+        pygame.display.flip()
+
+# This is the titlescreen, and lets user choose the game mode
+def Menu():
+    background = pygame.image.load("titleScreen.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+    
+    # Play music
+    menu.play(-1)
+    
+    screen.blit(background, (0, 0))
+
+    mouse = Mouse()
+    mouseGroup = pygame.sprite.Group(mouse)
+    
+    clock = pygame.time.Clock()
+    keepGoing = True
+
+    while keepGoing:
+        clock.tick(30)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                keepGoing = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    keepGoing = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if pos[0] >= 576 and pos[0] <= 802 and pos[1] >= 337 and pos[1] <= 370:
+                    keepGoing = False
+                    menu.stop()
+                    game1()
+                elif pos[0] >= 589 and pos[0] <= 769 and pos[1] >= 431 and pos[1] <= 459:
+                    keepGoing = False
+                    menu.stop()
+                    game2()
+                elif pos[0] >= 575 and pos[0] <= 792 and pos[1] >= 518 and pos[1] <= 558:
+                    keepGoing = False
+                    menu.stop()
+                    Instructions()
+                elif pos[0] >= 638 and pos[0] <= 730 and pos[1] >= 678 and pos[1] <= 712:
+                    keepGoing = False
+                    Exit()
+
+        # Refresh and update
+        mouseGroup.clear(screen, background)
+        mouseGroup.update()
+        mouseGroup.draw(screen)
+        pygame.display.flip()
+
+    menu.stop()
+
+# This is the goal post. It makes one post.
+class asteroidGoal(pygame.sprite.Sprite):
+
+    def __init__(self, xPos, yPos):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("asteroid.png").convert()
+        self.image = pygame.transform.scale(self.image, (40, 40))
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.rect = self.image.get_rect()
+        self.rect.center = (xPos, yPos)
+        self.xPos = xPos
+        self.yPos = yPos
+
+    def reset(self):
+        self.rect.center = (self.xPos, self.yPos)
+
+    def getPosition(self): # Returns (x, y) tuple
+        return (self.rect.centerx, self.rect.centery)
+
+# Keeps track of the score
+class Score(pygame.sprite.Sprite):
+
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.font = pygame.font.Font(None, 50)
+        self.text = 0
+        self.center = center
+        self.textColor = (255, 255, 255)
+        self.image = self.font.render(str(self.text), 1, self.textColor)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.center
+
+    def change(self):
+        self.text += 1
+        self.image = self.font.render(str(self.text), 1, self.textColor)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.center
+
+# Checks to see if a goal has been scored and if so returns a value so we can update score
+def checkGoal(puck):
+    if puck.rect.centerx < 100:
+        # Goal on left
+        if puck.rect.top > HEIGHT//2 - 80 and puck.rect.bottom < HEIGHT//2 + 80 and puck.rect.right <= 40:
+            return 0 # So we can update the goal score on screen
+        elif puck.rect.left <= 40 and puck.rect.left >= 30 and puck.rect.bottom >= HEIGHT//2 - 120 and puck.rect.top <= HEIGHT//2 - 80:
+            puck.dx *= -1
+        elif puck.rect.left <= 40 and puck.rect.left >= 30 and puck.rect.bottom >= HEIGHT//2 + 120 and puck.rect.top <= HEIGHT//2 + 80:
+            puck.dx *= -1
+
+    if puck.rect.centerx > WIDTH-100:
+        # Goal on right
+        if puck.rect.top > HEIGHT//2 - 80 and puck.rect.bottom < HEIGHT//2 + 80 and puck.rect.left >= WIDTH-40:
+            return 1 # So we can update the goal score on screen
+        elif puck.rect.right >= WIDTH - 40 and puck.rect.right <= WIDTH - 30 and puck.rect.bottom >= HEIGHT//2 - 120 and puck.rect.top <= HEIGHT//2 - 80:
+            puck.dx *= -1
+        elif puck.rect.right >= WIDTH - 40 and puck.rect.right <= WIDTH - 30 and puck.rect.bottom >= HEIGHT//2 + 120 and puck.rect.top <= HEIGHT//2  + 80:
+            puck.dx *= -1
+
+    return 2
+
+# This is the computer that plays against a player
+class ComputerBumper(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("bumper1.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect = self.image.get_rect()
+        self.rect.center = (200, HEIGHT//2)
+        self.dy = 0
+        self.dx = 0
+        self.x, self.y = 0, 0
+        self.complete = False 
+        self.rdistx = 0
+        self.rdisty = 0
+        self.dxV, self.dyV = 0, 0
+
+    def swap(self):
+        self.image = pygame.image.load("bumper1hit.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    def original(self):
+        self.image = pygame.image.load("bumper1.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    def update(self, puck):
+        # Makes sure that the computer bumper is in an appropriate position
+        if puck.rect.left < self.rect.left:
+            self.dxV, self.dyV = 0, 0
+        if self.rect.top <= 0:
+            self.rect.top = 5
+        elif self.rect.bottom >= HEIGHT:
+            self.bottom = HEIGHT - 5
+        if self.rect.right >= 500:
+            self.rect.right = 495
+        elif self.rect.left <= 80:
+            self.rect.left = 105
+        # This finds a random position where the computer bumper decideds to hit the puck. It then calculates in
+        # how many frames the puck will be there and moves bumper appropriately. Bumper has a very small error in
+        # it so it does not always hit the puck.
+        if puck.rect.right < WIDTH//2 and puck.rect.left > self.rect.right and puck.dx < 0 and not self.complete:
+            xPuckProjection = random.randint(200, 500)
+            xDist = puck.rect.left - xPuckProjection
+            frames = xDist // -puck.dx
+            puckTop = puck.rect.top
+            puckBottom = puck.rect.bottom
+            puckCenterY = puck.rect.centery
+            puckdy = puck.dy
+            for i in range(frames):
+                if puckTop <= 0 or puckBottom >= HEIGHT:
+                    puckdy *= -1
+                puckTop += puckdy
+                puckBottom += puckdy
+                puckCenterY += puckdy
+            dyProj = puckCenterY - self.rect.centery
+            dxProj = xPuckProjection - self.rect.right
+            self.dxV = dxProj//frames
+            self.dyV = dyProj//frames
+            self.rect.centerx += self.dxV
+            self.rect.centery += self.dyV
+
+            self.complete = True # Only want to do this calculation once, when the puck crosses onto the computer's side
+            
+        # Collision on front
+        if puck.rect.left <= self.rect.right and puck.rect.bottom >= self.rect.top and puck.rect.top <= self.rect.bottom and puck.rect.left >= self.rect.right - 50:
+            puck.dx *= -1
+            puck.dx += self.dx
+            puck.dy += self.dy
+            if puck.rect.bottom <= self.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= self.rect.centery:
+                puck.dy += 3
+            self.complete = False
+            self.dxV = 0
+            self.dyV = 0
+        # Collision on back
+        elif puck.rect.right >= self.rect.left and puck.rect.right <= self.rect.left + 50 and puck.rect.bottom >= self.rect.top and puck.rect.top <= self.rect.bottom:
+            puck.dx *= -1
+            puck.dx += self.dx
+            puck.dy += self.dy
+            if puck.rect.bottom <= self.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= self.rect.centery:
+                puck.dy += 3
+            self.complete = False
+            self.dxV = 0
+            self.dyV = 0
+        # Collision on top
+        elif puck.rect.bottom >= self.rect.top and puck.rect.bottom <= self.rect.top + 50 and puck.rect.right > self.rect.left and puck.rect.left < self.rect.right:
+            puck.dy *= -1
+            puck.dx += self.dx
+            puck.dy += self.dy
+            self.complete = False
+            if puck.rect.right <= self.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= self.rect.centerx:
+                puck.dx += 3
+        # Collision on bottom
+        elif puck.rect.top <= self.rect.bottom and puck.rect.top >= self.rect.bottom - 50 and puck.rect.right > self.rect.left and puck.rect.left < self.rect.right:
+            puck.dy *= -1
+            puck.dx += self.dx
+            puck.dy += self.dy
+            self.complete = False
+            if puck.rect.right <= self.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= self.rect.centerx:
+                puck.dx += 3
+
+        # Move computer bumper
+        if self.complete and self.rect.top > 0 and self.rect.bottom < HEIGHT:
+            self.rect.centerx += self.dxV
+            self.rect.centery += self.dyV
+
+        # When puck crosses onto other side reset self.complete
+        if puck.rect.left > WIDTH//2:
+            self.complete = False
+
+# Used for the two player mode. It is the bumper on the left.
+class BumperLeft(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.id = "left"
+        self.image = pygame.image.load("bumper1.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect = self.image.get_rect()
+        self.dx, self.dy = 0, 0
+        self.rect.center = (200, HEIGHT//2)
+
+    # Used when collision occurs, to display another image
+    def swap(self):
+        self.image = pygame.image.load("bumper1hit.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    # After so long, put back the original
+    def original(self):
+        self.image = pygame.image.load("bumper1.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    def update(self):
+        self.dx, self.dy = 0, 0
+
+    def moveUp(self):
+        self.dy = -5
+        if self.rect.top <= 0:
+            self.dy = 0
+
+        self.rect.centery += self.dy
+
+    def moveDown(self):
+        self.dy = 5
+        if self.rect.bottom >= HEIGHT:
+            self.dy = 0
+
+        self.rect.centery += self.dy
+
+    def moveLeft(self):
+        self.dx = -5
+        if self.rect.left <= 40:
+            self.dx = 0
+
+        self.rect.centerx += self.dx
+
+    def moveRight(self):
+        self.dx = 5
+        if self.rect.right >= WIDTH//2:
+            self.dx = 0
+
+        self.rect.centerx += self.dx
+
+# Bumper on the right, used in computer and 2 player game
+class BumperRight(pygame.sprite.Sprite):
+
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.id = "right"
+        self.image = pygame.image.load("bumper2.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect = self.image.get_rect()
+        self.dx, self.dy = 0, 0
+        self.rect.center = (WIDTH-200, HEIGHT//2)
+
+    # When collision occurs puts on another images
+    def swap(self):
+        self.image = pygame.image.load("bumper2hit.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    # Replaces collision image with original
+    def original(self):
+        self.image = pygame.image.load("bumper2.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (120, 120))
+        self.rect.center = self.rect.center
+
+    def update(self):
+        self.dx, self.dy = 0, 0
+
+    def moveUp(self):
+        self.dy = -5
+        if self.rect.top <= 0:
+            self.dy = 0
+
+        self.rect.centery += self.dy
+
+    def moveDown(self):
+        self.dy = 5
+        if self.rect.bottom >= HEIGHT:
+            self.dy = 0
+
+        self.rect.centery += self.dy
+
+    def moveLeft(self):
+        self.dx = -5
+        if self.rect.left <= WIDTH//2:
+            self.dx = 0
+
+        self.rect.centerx += self.dx
+
+    def moveRight(self):
+        self.dx = 5
+        if self.rect.right >= WIDTH - 40:
+            self.dx = 0
+
+        self.rect.centerx += self.dx
+
+# This handles the collision between the bumper and the puck. Tries to make collisons look as natural as possible.
+def BumperPuckCollision(bumper, puck):
+    if bumper.id == "right": # Used to identify with which bumper the puck has collided with
+        # Collision on front
+        if puck.rect.right >= bumper.rect.left and puck.rect.bottom >= bumper.rect.top and puck.rect.top <= bumper.rect.bottom and puck.rect.right <= bumper.rect.left + 50:
+            puck.dx *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.bottom <= bumper.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= bumper.rect.centery:
+                puck.dy += 3
+        # Collision on back
+        elif puck.rect.left <= bumper.rect.right and puck.rect.left >= bumper.rect.right - 50 and puck.rect.bottom >= bumper.rect.top and puck.rect.top <= bumper.rect.bottom:
+            puck.dx *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.bottom <= bumper.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= bumper.rect.centery:
+                puck.dy += 3
+        # Collision on top
+        elif puck.rect.bottom >= bumper.rect.top and puck.rect.bottom <= bumper.rect.top + 50 and puck.rect.right > bumper.rect.left and puck.rect.left < bumper.rect.right:
+            puck.dy *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.right <= bumper.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= bumper.rect.centerx:
+                puck.dx += 3
+        # Collision on bottom
+        elif puck.rect.top <= bumper.rect.bottom and puck.rect.top >= bumper.rect.bottom - 50 and puck.rect.right > bumper.rect.left and puck.rect.left < bumper.rect.right:
+            puck.dy *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.right <= bumper.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= bumper.rect.centerx:
+                puck.dx += 3
+    else:
+        # Collision on front
+        if puck.rect.left <= bumper.rect.right and puck.rect.bottom >= bumper.rect.top and puck.rect.top <= bumper.rect.bottom and puck.rect.left >= bumper.rect.right - 50:
+            puck.dx *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.bottom <= bumper.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= bumper.rect.centery:
+                puck.dy += 3
+        # Collision on back
+        elif puck.rect.right >= bumper.rect.left and puck.rect.right <= bumper.rect.left + 50 and puck.rect.bottom >= bumper.rect.top and puck.rect.top <= bumper.rect.bottom:
+            puck.dx *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.bottom <= bumper.rect.centery:
+                puck.dy -= 3
+            elif puck.rect.top >= bumper.rect.centery:
+                puck.dy += 3
+        # Collision on top
+        elif puck.rect.bottom >= bumper.rect.top and puck.rect.bottom <= bumper.rect.top + 50 and puck.rect.right > bumper.rect.left and puck.rect.left < bumper.rect.right:
+            puck.dy *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.right <= bumper.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= bumper.rect.centerx:
+                puck.dx += 3
+        # Collision on bottom
+        elif puck.rect.top <= bumper.rect.bottom and puck.rect.top >= bumper.rect.bottom - 50 and puck.rect.right > bumper.rect.left and puck.rect.left < bumper.rect.right:
+            puck.dy *= -1
+            puck.dx += bumper.dx
+            puck.dy += bumper.dy
+            if puck.rect.right <= bumper.rect.centerx:
+                puck.dx -= 3
+            elif puck.rect.left >= bumper.rect.centerx:
+                puck.dx += 3
+        
+# This controls the puck and how it moves.
+class Puck(pygame.sprite.Sprite):
+
+    def __init__(self, game):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("Puck.png").convert()
+        self.image.set_colorkey(self.image.get_at((1, 1)))
+        self.image = pygame.transform.scale(self.image, (40, 40))
+        self.rect = self.image.get_rect()
+        if game == 2:
+            self.rect.centerx = random.randint(200, WIDTH-200)
+            self.rect.centery = random.randint(200, HEIGHT-200)
+        # Put it on user's side if playing agains computer
+        elif game == "1":
+            self.rect.centerx = random.randint(WIDTH//2 + 50, WIDTH-200)
+            self.rect.centery = random.randint(200, HEIGHT-200)
+        self.dx = 0
+        self.dy = 0
+
+    # Put it back in a position when goal is scored
+    def reset(self, game):
+        if game == 2:
+            self.rect.centerx = random.randint(200, WIDTH-200)
+            self.rect.centery = random.randint(200, HEIGHT-200)
+        # Put it on user's side if playing agains computer
+        elif game == "1":
+            self.rect.centerx = random.randint(WIDTH//2 + 50, WIDTH-200)
+            self.rect.centery = random.randint(200, HEIGHT-200)
+        self.dx = 0
+        self.dy = 0
+
+    def update(self):
+        if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
+            self.dy *= -1
+        if self.rect.left <= 0 and (self.rect.bottom <= HEIGHT//2 - 80  or self.rect.top >= HEIGHT//2 + 80):
+            self.rect.left = 0
+            self.dx *= -1
+        if self.rect.right >= WIDTH and (self.rect.bottom <= HEIGHT//2 - 80  or self.rect.top >= HEIGHT//2 + 80):
+            self.rect.right = WIDTH
+            self.dx *= -1
+
+        self.rect.centerx += self.dx
+        self.rect.centery += self.dy
+              
+
+# 2 player game
+def game2():
+    background = pygame.image.load("gameBackground.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+    screen.blit(background, (0, 0))
+
+    # Play music
+    game.play(-1)
+
+    # These are the four posts for goals
+    leftTopPost = asteroidGoal(20, HEIGHT//2 - 100)
+    leftBottomPost = asteroidGoal(20, HEIGHT//2 + 100)
+    rightTopPost = asteroidGoal(WIDTH-20, HEIGHT//2 - 100)
+    rightBottomPost = asteroidGoal(WIDTH-20, HEIGHT//2 + 100)
+    goalGroup = pygame.sprite.Group(leftTopPost, leftBottomPost, rightTopPost,  rightBottomPost)
+
+    # This is the score
+    scoreRight = Score((100, 40))
+    scoreLeft = Score((WIDTH-100, 40))
+    scoreGroup = pygame.sprite.Group(scoreLeft, scoreRight)
+
+    # Bumpers
+    bumperLeft = BumperLeft()
+    blGroup = pygame.sprite.Group(bumperLeft)
+    bumperRight = BumperRight()
+    brGroup = pygame.sprite.Group(bumperRight)
+
+    # Puck
+    puck = Puck(2)
+    puckGroup = pygame.sprite.Group(puck)
+
+    clock = pygame.time.Clock()
+    keepGoing = True
+
+    # Sound
+
+    # As want constant movement, need to see which keys are pressed and the continually update them
+    # Right side bumper
+    upR = False
+    downR = False
+    leftR = False
+    rightR = False
+    # Left side bumper
+    upL = False
+    downL = False
+    leftL = False
+    rightL = False
+    # Used to display collision image
+    hit1 = False
+    hit2 = False
+    # Because puck and bumper never have perfect collisions sometimes it will double collide, this stops it from double colliding
+    # and also holds collision image longer
+    delay_1 = 30
+    delay_2 = 30
+
+    # Used to keep track of goals scored
+    goalCount2, goalCount1 = 0, 0
+
+    while keepGoing:
+        clock.tick(30)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                keepGoing = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    keepGoing = False
+                # Right Bumper
+                if event.key == pygame.K_UP:
+                    upR = True
+                if event.key == pygame.K_DOWN:
+                    downR = True
+                if event.key == pygame.K_LEFT:
+                    leftR = True
+                if event.key == pygame.K_RIGHT:
+                    rightR = True
+                # Left Bumper
+                if event.key == pygame.K_w:
+                    upL = True
+                if event.key == pygame.K_s:
+                    downL = True
+                if event.key == pygame.K_a:
+                    leftL = True
+                if event.key == pygame.K_d:
+                    rightL = True
+            if event.type == pygame.KEYUP:
+                # Right Bumper
+                if event.key == pygame.K_UP:
+                    upR = False
+                if event.key == pygame.K_DOWN:
+                    downR = False
+                if event.key == pygame.K_LEFT:
+                    leftR = False
+                if event.key == pygame.K_RIGHT:
+                    rightR = False
+                # Left Bumper
+                if event.key == pygame.K_w:
+                    upL = False
+                if event.key == pygame.K_s:
+                    downL = False
+                if event.key == pygame.K_a:
+                    leftL = False
+                if event.key == pygame.K_d:
+                    rightL = False
+        # Moves pucks appropriately
+        if upR:
+            bumperRight.moveUp()
+        if downR:
+            bumperRight.moveDown()
+        if leftR:
+            bumperRight.moveLeft()
+        if rightR:
+            bumperRight.moveRight()
+        if upL:
+            bumperLeft.moveUp()
+        if downL:
+            bumperLeft.moveDown()
+        if leftL:
+            bumperLeft.moveLeft()
+        if rightL:
+            bumperLeft.moveRight()
+
+        # Checks for collision on right and then updates everything if collision occured
+        if pygame.sprite.spritecollide(puck, brGroup, False) and delay_2 == 30:
+            collision.play()
+            BumperPuckCollision(bumperRight, puck)
+            bumperRight.swap()
+            hit2 = True
+            delay_2 = 0
+                                       
+        if delay_2 < 30:
+            delay_2 += 1                        
+        elif hit2:
+            bumperRight.original()
+            hit2 = False
+
+        # Checks for collision on left and then updates everything if collision occured
+        if pygame.sprite.spritecollide(puck, blGroup, False) and delay_1 == 30:
+            collision.play()
+            BumperPuckCollision(bumperLeft, puck)
+            bumperLeft.swap()
+            hit1 = True
+            delay_1 = 0
+            
+        if delay_1 < 30:
+            delay_1 += 1
+        elif hit1:
+            bumperLeft.original()
+            hit1 = False
+
+        # Checks if goal is scored and if so, updates score.
+        if checkGoal(puck) == 1:
+            scoreRight.change()
+            puck.reset(2)
+            goalCount2 += 1
+        elif checkGoal(puck) == 0:
+            scoreLeft.change()
+            puck.reset(2)
+            goalCount1 += 1
+
+        if goalCount2 >= 3:
+            keepGoing = False
+            game.stop()
+            Result(2)
+        elif goalCount1 >= 3:
+            keepGoing = False
+            game.stop()
+            Result(1)
+        # Update Goals
+        goalGroup.clear(screen, background)
+        goalGroup.draw(screen)
+
+        # Update Score
+        scoreGroup.clear(screen, background)
+        scoreGroup.draw(screen)
+
+        # Update Bumpers
+        blGroup.clear(screen, background)
+        brGroup.clear(screen, background)
+        blGroup.update()
+        brGroup.update()
+        blGroup.draw(screen)
+        brGroup.draw(screen)
+
+        # Update Puck
+        puckGroup.clear(screen, background)
+        puckGroup.update()
+        puckGroup.draw(screen)
+
+        pygame.display.flip()
+
+    # Stop game music
+    game.stop()
+
+    Menu() # Go back to titlescreen if user exits
+
+
+def game1():
+    background = pygame.image.load("gameBackground.png").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+    screen.blit(background, (0, 0))
+
+    # Play music
+    game.play(-1)
+
+    # These are the four posts for goals
+    leftTopPost = asteroidGoal(20, HEIGHT//2 - 100)
+    leftBottomPost = asteroidGoal(20, HEIGHT//2 + 100)
+    rightTopPost = asteroidGoal(WIDTH-20, HEIGHT//2 - 100)
+    rightBottomPost = asteroidGoal(WIDTH-20, HEIGHT//2 + 100)
+    goalGroup = pygame.sprite.Group(leftTopPost, leftBottomPost, rightTopPost,  rightBottomPost)
+
+    # This is the score
+    scoreRight = Score((100, 40))
+    scoreLeft = Score((WIDTH-100, 40))
+    scoreGroup = pygame.sprite.Group(scoreLeft, scoreRight)
+
+    # Bumpers
+    bumperLeft = ComputerBumper()
+    blGroup = pygame.sprite.Group(bumperLeft)
+    bumperRight = BumperRight()
+    brGroup = pygame.sprite.Group(bumperRight)
+
+    # Puck
+    puck = Puck("1")
+    puckGroup = pygame.sprite.Group(puck)
+
+    # Sound
+
+    clock = pygame.time.Clock()
+    keepGoing = True
+
+    # Used to control movement for right puck, computer controls its own
+    upR = False
+    downR = False
+    leftR = False
+    rightR = False
+
+    hit1 = False
+    hit2 = False
+
+    delay_1 = 30
+    delay_2 = 30
+
+    # Used to keep track of goal count
+    goalCount2, goalCount1 = 0, 0
+
+    while keepGoing:
+        clock.tick(30)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                keepGoing = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    keepGoing = False
+                # Right Bumper
+                if event.key == pygame.K_UP:
+                    upR = True
+                if event.key == pygame.K_DOWN:
+                    downR = True
+                if event.key == pygame.K_LEFT:
+                    leftR = True
+                if event.key == pygame.K_RIGHT:
+                    rightR = True
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP:
+                    upR = False
+                if event.key == pygame.K_DOWN:
+                    downR = False
+                if event.key == pygame.K_LEFT:
+                    leftR = False
+                if event.key == pygame.K_RIGHT:
+                    rightR = False
+        # Move the right bumper
+        if upR:
+            bumperRight.moveUp()
+        if downR:
+            bumperRight.moveDown()
+        if leftR:
+            bumperRight.moveLeft()
+        if rightR:
+            bumperRight.moveRight()
+        # Check for collision on right bumper and then update if occurs
+        if pygame.sprite.spritecollide(puck, brGroup, False) and delay_2 == 30:
+            collision.play()
+            BumperPuckCollision(bumperRight, puck)
+            bumperRight.swap()
+            hit2 = True
+            delay_2 = 0
+                                       
+        if delay_2 < 30:
+            delay_2 += 1                     
+        elif hit2:
+            bumperRight.original()
+            hit2 = False
+        # If puck collides with computer sort display its collision image.
+        if pygame.sprite.spritecollide(puck, blGroup, False) and delay_1 == 30:
+            collision.play()
+            bumperLeft.swap()
+            hit1 = True
+            delay_1 = 0
+            
+        if delay_1 < 30:
+            delay_1 += 1
+        elif hit1:
+            bumperLeft.original()
+            hit1 = False
+
+        # Check if goal scored and the put puck back on users side
+        if checkGoal(puck) == 1:
+            scoreRight.change()
+            puck.reset("1")
+            goalCount1 += 1
+        elif checkGoal(puck) == 0:
+            scoreLeft.change()
+            puck.reset("1")
+            goalCount2 += 1
+        if goalCount2 >= 3:
+            keepGoing = False
+            game.stop()
+            Result(1)
+        elif goalCount1 >= 3:
+            keepGoing = False
+            game.stop()
+            Result("COM")
+
+        # Update Goals
+        goalGroup.clear(screen, background)
+        goalGroup.draw(screen)
+
+        # Update Score
+        scoreGroup.clear(screen, background)
+        scoreGroup.draw(screen)
+
+        # Update Bumpers
+        blGroup.clear(screen, background)
+        brGroup.clear(screen, background)
+        blGroup.update(puck)
+        brGroup.update()
+        blGroup.draw(screen)
+        brGroup.draw(screen)
+
+        # Update Puck
+        puckGroup.clear(screen, background)
+        puckGroup.update()
+        puckGroup.draw(screen)
+
+        pygame.display.flip()
+
+    # Stop game music
+    game.stop()
+
+    Menu()
+
+def main():
+    Menu()
+
+main()
+
+pygame.quit()
